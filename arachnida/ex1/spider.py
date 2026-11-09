@@ -31,9 +31,9 @@ def dl_imgs(img_urls, args, parser):
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
-            print(f"Downloaded: {output_path}")
+            print(f"downloaded: {output_path}")
         except requests.RequestException as error:
-            print(f"Could not download {img_url}: {error}")
+            print(f"could not download {img_url}: {error}")
 
 
 def get_links(page, args) -> list[str]:
@@ -87,7 +87,7 @@ def fetch_page(args, parser) -> str:
         )
         response.raise_for_status()
     except requests.RequestException as error:
-        parser.error(f"could not fetch URL: {error}")
+        parser.error(f"could not fetch url: {error}")
     # print(response.text)
     return response.text
 
@@ -108,11 +108,11 @@ def recurse(url, depth, max_depth, args, parser, visited):
         recurse(next_url, depth + 1, max_depth, args, parser, visited)
 
 
-def spider_dl():
+def spider():
     parser = argparse.ArgumentParser(
         prog="./spider",
-        description="Download images from a page.",
-        epilog="Short usage: ./spider [-r] [-l N] [-p DIR] URL",
+        description="download images from a page",
+        epilog="usage: spider [-r] [-l N] [-p dir] url",
     )
     parser.add_argument(
         "-r",
@@ -130,7 +130,7 @@ def spider_dl():
         default="./data/",
         help="output dir",
     )
-    parser.add_argument("url", help="page URL")
+    parser.add_argument("url", help="page url")
     args = parser.parse_args()
     if args.l < 0:
         parser.error("-l must be >= 0")
@@ -149,4 +149,4 @@ def spider_dl():
 
 
 if __name__ == "__main__":
-    spider_dl()
+    spider()
