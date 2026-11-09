@@ -1,0 +1,115 @@
+import argparse
+import requests
+from bs4 import BeautifulSoup as bs
+from urllib.parse import urljoin
+from pathlib import Path
+from urllib.parse import urlsplit, unquote
+
+
+# https://www.scrapingbee.com/blog/download-image-python/
+def dl_imgs(img_urls, args, parser):
+    directory = Path(args.p)
+    directory.mkdir(parents=True, exist_ok=True)
+    for img_url in img_urls:
+        filename = unquote(Path(urlsplit(img_url).path).name) or "image"
+        output_path = directory / filename
+
+        try:
+            with requests.get(
+                img_url,
+                timeout=15,
+                headers={"User-Agent": "spider/1.0 (learning project)"},
+                stream=True,
+            ) as response:
+                response.raise_for_status()
+
+                with output_path.open("wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+
+            print(f"Downloaded: {output_path}")
+        except requests.RequestException as error:
+            print(f"Could not download {img_url}: {error}")
+
+
+def get_imageurl(page, args):
+    # allowed_extensions = (".jpg", ".jpeg", ".png", ".gif", ".bmp")
+    allowed_extensions = (".svg")
+    soup = bs(page, "html.parser")  # py’s builtin html parser
+    img_urls = []
+    for img in soup.find_all("img", src=True):  # refuse <img alt="No source">
+        src = img["src"].lower().split("?", 1)[0]  # splits at first ? & keeps whats before it
+        if src.endswith(allowed_extensions):
+            # img_url = urljoin(args.url, img["src"])  # read urljoin(base, link)
+            # print(args.url)
+            # print(img_url)
+            img_urls.append(urljoin(args.url, img["src"]))
+    # for entry in img_urls:
+    #     print(entry)
+
+    return img_urls
+
+
+def fetch_page(args, parser):
+    try:
+        response = requests.get(
+            args.url,
+            timeout=15,
+            headers={"User-Agent": "spider/1.0 (learning project)"},
+        #     headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0",
+        #    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        #    "Accept-Language": "en-US,en;q=0.9"
+        #    }
+        )
+        response.raise_for_status()
+    except requests.RequestException as error:
+        parser.error(f"could not fetch URL: {error}")
+
+    # print(response.text)
+    return response.text
+
+
+def spider_dl():
+    parser = argparse.ArgumentParser(
+        prog="./spider",
+        description="download images from URL."
+    )
+    parser.add_argument(
+        "-r",
+        action="store_true",
+        help="recursive download"
+    )
+    parser.add_argument(
+        "-l",
+        type=int,
+        default=5,
+        help="depth limit (default: 5; requires -r)"
+    )
+    parser.add_argument(
+        "-p",
+        default="./data/",
+        help="download path (default: ./data/)"
+    )
+    parser.add_argument("url", help="URL to download images from")
+
+    args = parser.parse_args()
+
+    if args.l < 0:
+        parser.error("-l must be >= 0")
+    if args.l != 5 and not args.r:
+        parser.error("-l requires -r")
+
+    page = fetch_page(args, parser)
+    img_urls = get_imageurl(page, args)
+    dl_imgs(img_urls, args, parser)
+
+    # print("-r:", args.r)
+    # print("-l:", args.l)
+    # print("-p:", args.p)
+    # print("url:", args.url)
+    # print("args:", args)
+
+
+if __name__ == "__main__":
+    spider_dl()
