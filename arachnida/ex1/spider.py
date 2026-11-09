@@ -22,7 +22,7 @@ def dl_imgs(img_urls, args, parser):
                 stream=True,
             ) as response:
                 response.raise_for_status()
-
+                # print(response.headers.get("Content-Type"))
                 with output_path.open("wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
