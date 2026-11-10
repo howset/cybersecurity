@@ -2,6 +2,7 @@ import argparse
 from PIL import Image
 from pathlib import Path
 
+
 # https://www.pythonforall.com/modules/pillow/pwmeta
 def get_tags(filenames):
     # md_tags = piexif.load(filename)
