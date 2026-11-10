@@ -89,7 +89,7 @@ def fetch_page(url) -> str:
 
 
 def recurse(url, depth, max_depth, args, parser, visited):
-    print(f"########## {url} ##########")
+    # print(f"########## {url} ##########")
     if url in visited:
         return
     visited.add(url)
@@ -105,6 +105,7 @@ def recurse(url, depth, max_depth, args, parser, visited):
         return
     linklist = get_links(page, args)
     for next_url in linklist:
+        print(f"########## {next_url} ##########")
         recurse(next_url, depth + 1, max_depth, args, parser, visited)
     print(visited)
 
@@ -144,7 +145,8 @@ def spider():
         max_depth = args.l
     else:
         max_depth = 0
-    recurse(args.url, 0, max_depth, args, parser, set())  # set() -> store unique vals
+    visited = set()
+    recurse(args.url, 0, max_depth, args, parser, visited)  # set() -> store unique vals
     # print("args:", args)
 
 

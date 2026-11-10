@@ -1,0 +1,19 @@
+# Image files
+*.apng
+*.avif
+*.bmp
+*.gif
+*.heic
+*.heif
+*.ico
+*.jpeg
+*.jpg
+*.png
+*.svg
+*.tif
+*.tiff
+*.webp
+*.xcf
+
+# virt env
+.venv/

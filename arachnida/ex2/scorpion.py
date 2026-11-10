@@ -15,17 +15,21 @@ def get_tags(filenames):
     # return md_tags
     for filename in filenames:
         img = Image.open(filename)
+        # for key, value in img.info.items():
+        #     print(f"{key}: {value}")
+        # print(img.getxmp())
         print(f"########## {filename} ##########")
-        exif_data = img.getexif()
+        print("format:", img.format, "| size:", img.size, "| mode:", img.mode)
+        exif_data = img.getexif()  # only exif (IFD0), there may be others (img.info, img.getxmp())
         if not exif_data:
             print("no exif data")
-            continue
-        # main details
+        # main details (make model etc)
         for tag_id, value in exif_data.items():
             tag_name = Image.ExifTags.TAGS.get(tag_id, tag_id)
             print(tag_name, ":", value)
         # other details
-        # exif_ifd = exif_data.get_ifd(0x8769)
+        # exif_ifd = exif_data.get_ifd(ExifTags.IFD.Exif)  # exif ifd. exposure, etc
+        # exif_ifd = exif_data.get_ifd(0x8825) # gps ifd
         # for tag_id, value in exif_ifd.items():
         #     tag_name = ExifTags.TAGS.get(tag_id, tag_id)
         #     print(f"{tag_name}: {value}")
