@@ -1,5 +1,5 @@
 import argparse
-from PIL import Image
+from PIL import Image, ExifTags
 from pathlib import Path
 
 
@@ -20,9 +20,15 @@ def get_tags(filenames):
         if not exif_data:
             print("no exif data")
             continue
+        # main details
         for tag_id, value in exif_data.items():
             tag_name = Image.ExifTags.TAGS.get(tag_id, tag_id)
             print(tag_name, ":", value)
+        # other details
+        # exif_ifd = exif_data.get_ifd(0x8769)
+        # for tag_id, value in exif_ifd.items():
+        #     tag_name = ExifTags.TAGS.get(tag_id, tag_id)
+        #     print(f"{tag_name}: {value}")
 
 
 def collect_images(args) -> list:
