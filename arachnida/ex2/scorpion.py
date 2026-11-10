@@ -44,14 +44,12 @@ def collect_images(args) -> list:
 
 def scorpion():
     parser = argparse.ArgumentParser(
-            prog="./scorpion",
+            prog="scorpion.py",
             description="display metadata from image",
-            epilog="usage: scorpion file1 [file2 ...]",
         )
     parser.add_argument(
         "files",
         nargs="+",  # accept one/more
-        metavar="FILE",
         help="image file(s)",
     )
     args = parser.parse_args()

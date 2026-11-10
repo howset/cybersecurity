@@ -1,9 +1,8 @@
 import argparse
 import requests
 from bs4 import BeautifulSoup as bs
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit, unquote, urldefrag
 from pathlib import Path
-from urllib.parse import urlsplit, unquote, urldefrag
 
 
 # https://www.scrapingbee.com/blog/download-image-python/
@@ -67,27 +66,24 @@ def get_imageurl(page, args) -> list[str]:
     return img_urls
 
 
-def fetch_page(args, parser) -> str:
+def fetch_page(url) -> str:
     """fetch and return the html"""
-    try:
-        response = requests.get(
-            args.url,
-            timeout=15,
-            headers={"User-Agent": "spider/1.0 (learning project)"},
-            # headers={
-            #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            #     "Accept-Language": "en-US,en;q=0.9"
-            # }
-            # headers = {
-            #     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0",
-            #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            #     "Accept-Language": "en-US,en;q=0.9"
-            # }
-        )
-        response.raise_for_status()
-    except requests.RequestException as error:
-        parser.error(f"could not fetch url: {error}")
+    response = requests.get(
+        url,
+        timeout=15,
+        headers={"User-Agent": "spider/1.0 (learning project)"},
+        # headers={
+        #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        #     "Accept-Language": "en-US,en;q=0.9"
+        # }
+        # headers = {
+        #     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0",
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        #     "Accept-Language": "en-US,en;q=0.9"
+        # }
+    )
+    response.raise_for_status()
     # print(response.text)
     return response.text
 
@@ -99,7 +95,10 @@ def recurse(url, depth, max_depth, args, parser, visited):
     visited.add(url)
     # print(url)
     args.url = url
-    page = fetch_page(args, parser)
+    try:
+        page = fetch_page(url)
+    except requests.RequestException as error:
+        parser.error(f"could not fetch url: {error}")
     images = get_imageurl(page, args)
     dl_imgs(images, args, parser)
     if depth >= max_depth:
@@ -112,13 +111,12 @@ def recurse(url, depth, max_depth, args, parser, visited):
 
 def spider():
     parser = argparse.ArgumentParser(
-        prog="./spider",
+        prog="spider.py",
         description="download images from a page",
-        epilog="usage: spider [-r] [-l N] [-p dir] url",
     )
     parser.add_argument(
         "-r",
-        action="store_true",
+        action="store_true",  # set to true if included
         help="crawl linked pages",
     )
     parser.add_argument(
@@ -137,7 +135,7 @@ def spider():
     if args.l < 0:
         parser.error("-l must be >= 0")
     if args.l != 5 and not args.r:
-        parser.error("-l requires -r")
+        parser.error("-l requires -r")  # necessary?
     # page = fetch_page(args, parser)
     # img_urls = get_imageurl(page, args)
     # dl_imgs(img_urls, args, parser)
