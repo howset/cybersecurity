@@ -98,7 +98,9 @@ def recurse(url, depth, max_depth, args, parser, visited):
     try:
         page = fetch_page(url)
     except requests.RequestException as error:
-        parser.error(f"could not fetch url: {error}")
+        # parser.error(f"could not fetch url: {error}")
+        print(f"could not fetch {url}: {error}")
+        return
     images = get_imageurl(page, args)
     dl_imgs(images, args, parser)
     if depth >= max_depth:
