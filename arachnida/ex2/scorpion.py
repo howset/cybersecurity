@@ -5,34 +5,35 @@ from pathlib import Path
 
 # https://www.pythonforall.com/modules/pillow/pwmeta
 # def get_tags(filenames):
-#     # md_tags = piexif.load(filename)
-#     # print(md_tags["0th"])
-#     # print(md_tags["Exif"])
-#     # print(md_tags["GPS"])
-#     # print(md_tags["Interop"])
-#     # print(md_tags["1st"])
-#     # print(md_tags["thumbnail"])
-#     # return md_tags
 #     for filename in filenames:
 #         img = Image.open(filename)
 #         # for key, value in img.info.items():
 #         #     print(f"{key}: {value}")
-#         # print(img.getxmp())
 #         print(f"########## {filename} ##########")
 #         print("format:", img.format, "| size:", img.size, "| mode:", img.mode)
+#         print(f"-------- xmp --------")
+#         xmp_data = img.getxmp()
+#         if not xmp_data:
+#             print("no xmp data")
+#         else:
+#             print(xmp_data)
+#         print(f"-------- exif --------")
 #         exif_data = img.getexif()  # only exif (IFD0), there may be others (img.info, img.getxmp())
 #         if not exif_data:
 #             print("no exif data")
-#         # main details (make model etc)
-#         for tag_id, value in exif_data.items():
+#         for tag_id, value in exif_data.items(): # main details (make model etc)
 #             tag_name = Image.ExifTags.TAGS.get(tag_id, tag_id)
 #             print(tag_name, ":", value)
 #         # other details
-#         # exif_ifd = exif_data.get_ifd(ExifTags.IFD.Exif)  # exif ifd. exposure, etc
-#         # exif_ifd = exif_data.get_ifd(0x8825) # gps ifd
-#         # for tag_id, value in exif_ifd.items():
-#         #     tag_name = ExifTags.TAGS.get(tag_id, tag_id)
-#         #     print(f"{tag_name}: {value}")
+#         exif_ifd = exif_data.get_ifd(ExifTags.IFD.Exif)  # exif ifd. exposure, etc
+#         for tag_id, value in exif_ifd.items():
+#             tag_name = ExifTags.TAGS.get(tag_id, tag_id)
+#             print(f"{tag_name}: {value}")
+#         # gps data
+#         gps_ifd = exif_data.get_ifd(ExifTags.IFD.GPSInfo)
+#         for tag_id, value in gps_ifd.items():
+#             tag_name = ExifTags.GPSTAGS.get(tag_id, tag_id)
+#             print(f"{tag_name}: {value}")
 
 TYPE_SIZE = {
     1: 1,  # byte
@@ -159,7 +160,6 @@ def scorpion():
     images = collect_images(args)
     # get_tags(images)
     get_tags2(images)
-
 
 
 if __name__ == "__main__":
