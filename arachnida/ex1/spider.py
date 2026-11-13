@@ -1,9 +1,14 @@
 import argparse
 import requests
 from bs4 import BeautifulSoup as bs
-from urllib.parse import urljoin, urlsplit, unquote, urldefrag
+from urllib.parse import urljoin, urlsplit, unquote, urldefrag, urlunsplit
 from pathlib import Path
+from urllib.robotparser import RobotFileParser
 
+
+USER_AGENT = "spider/1.0 (learning project)"
+# ROBOTS_AGENT = "spider"
+# robots_cache = {}
 
 # https://www.scrapingbee.com/blog/download-image-python/
 def dl_imgs(img_urls, args, parser):
@@ -17,11 +22,14 @@ def dl_imgs(img_urls, args, parser):
         while output_path.exists():  # check duplicates
             output_path = directory / f"{Path(filename).stem}_{number}{Path(filename).suffix}"
             number += 1
+        # if not check_robots(img_url):
+        #     print(f"blocked by robots.txt: {img_url}")
+        #     continue
         try:
             with requests.get(
                 img_url,
                 timeout=15,
-                headers={"User-Agent": "spider/1.0 (learning project)"},
+                headers={"User-Agent": USER_AGENT},
                 stream=True,
             ) as response:
                 response.raise_for_status()
@@ -66,12 +74,63 @@ def get_imageurl(page, args) -> list[str]:
     return img_urls
 
 
+# def check_robots(url):
+#     """Return whether the crawler may fetch url according to robots.txt."""
+#     parts = urlsplit(url)
+#     site = urlunsplit((parts.scheme, parts.netloc, "", "", ""))
+
+#     if site not in robots_cache:
+#         robots_url = f"{site}/robots.txt"
+#         try:
+#             response = requests.get(
+#                 robots_url,
+#                 timeout=15,
+#                 headers={"User-Agent": USER_AGENT},
+#             )
+#         except requests.RequestException:
+#             # Conservative policy: don't crawl if robots.txt can't be read.
+#             robots_cache[site] = None
+#         else:
+#             parser = RobotFileParser(robots_url)
+#             if response.status_code == 200:
+#                 lines = response.text.splitlines()
+#                 parser.parse(lines)
+#                 # urllib.robotparser runs rule paths through urlparse(). That
+#                 # mistakes a path beginning with "//" for a network location
+#                 # and turns `Disallow: //` into an empty path (which blocks
+#                 # every URL). Restore the literal robots.txt path.
+#                 for entry in [*parser.entries, parser.default_entry]:
+#                     if entry is None:
+#                         continue
+#                     for rule in entry.rulelines:
+#                         if not rule.allowance and rule.path == "":
+#                             rule.path = "//"
+#                 # parse() doesn't set last_checked; can_fetch() denies every
+#                 # URL until the parser has been marked as loaded.
+#                 parser.modified()
+#                 robots_cache[site] = parser
+#             elif 400 <= response.status_code < 500:
+#                 # RFC 9309 treats robots.txt as unavailable for 4xx responses.
+#                 # 401/403 may signal intentional access restrictions, so fail closed.
+#                 robots_cache[site] = None if response.status_code in (401, 403) else False
+#             else:
+#                 # Server errors and redirects are treated as unreachable here.
+#                 robots_cache[site] = None
+
+#     rules = robots_cache[site]
+#     if rules is False:
+#         return True
+#     # RobotFileParser matches robots.txt groups against the product token,
+#     # not the complete HTTP User-Agent string (which includes version/comments).
+#     return rules is not None and rules.can_fetch(ROBOTS_AGENT, url)
+
+
 def fetch_page(url) -> str:
     """fetch and return the html"""
     response = requests.get(
         url,
         timeout=15,
-        headers={"User-Agent": "spider/1.0 (learning project)"},
+        headers={"User-Agent": USER_AGENT},
         # headers={
         #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -95,6 +154,9 @@ def recurse(url, depth, max_depth, args, parser, visited):
     visited.add(url)
     # print(url)
     args.url = url
+    # if not check_robots(url):
+    #     print(f"blocked by robots.txt: {url}")
+    #     return
     try:
         page = fetch_page(url)
     except requests.RequestException as error:
